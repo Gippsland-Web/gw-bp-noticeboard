@@ -1,0 +1,80 @@
+<script>
+(function ($) {
+    
+
+    $(document).ready(function () {
+        $('form.new-notice-entry').live("submit",function (event) {
+                event.preventDefault();
+                $('.bp-user-notice-message').remove();
+                $.post("/wp-admin/admin-ajax.php", $(this).serialize(), function (data) {
+
+                    if(data.result == false){
+                        var html = '<div id="message" class="bp-user-notice-message error"><p>';
+                        $.each(data.errors, function () {
+                            html += this+'<br>';
+                        });
+                        html += '</p></div>';
+                        $(html).insertAfter($('form.new-notice-entry'));
+                    } else {
+                        var html = '<div id="message" class="bp-user-notice-message success"><p>Your notice has been posted</p></div>';
+                        $(html).insertAfter($('form.new-notice-entry'));
+                        $('form.new-notice-entry').slideUp();
+                    }
+                });
+            }
+        );
+    });
+
+
+$(document).ready(function () {
+$('form.new-notice-btn').submit(function (event) {
+event.preventDefault();
+var html = '<div class="panel panel-warning"><div class="panel-heading">New Notice</div>            <div class="panel-body"><form class="form new-notice-entry">                            <label for="title">Notice Title</label><input name="title" class="form-control" type="text"  placeholder="Title"> </input><label>What kind of volunteering are you looking for?</label><textarea class="form-control" name="content"></textarea> {{function("wp_nonce_field","new-notice")}} <input type="hidden" name="action" value="gw_new_notice"> <input type="submit" value="Submit"></button></form> </div></div>';
+
+$('form.new-notice-btn').after(html);
+$('form.new-notice-btn').slideUp();
+ } );
+ });
+
+
+})(jQuery)
+</script>
+
+<div class="row  text-center">
+    <div class="col-sm-12">
+    <div class="col-sm-12">
+    <h1>{{type}} Hotlist</h1>
+        <a class="btn button" href="/hotlist/?t=h">Host Notices</a>
+        <a class="btn button" href="/hotlist/?t=w">WWOOFER Notices</a>
+        <form class="new-notice-btn"><input type="submit" value="New Notice"></input></form>
+         
+
+    </div>
+        {% for n in data %}
+        <div class="col-md-6 col-sm-12 panel panel-warning">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="/members/{{function('bp_core_get_user_displayname',n.post_author)}}">
+                            {{function('bp_core_fetch_avatar',{"item_id": n.post_author, "type": 'thumb'})}}
+                            <p>{{function('bp_core_get_user_displayname',n.post_author)}}</p>
+                        </a>
+                </div>
+                <div class="col-md-9">
+                    <h3>{{n.post_title}}</h3>
+                    <p>Posted: {{n.post_date}}</p>
+                </div>
+            </div>    
+            </div>
+            <div class="panel-body" style="background-color:#eff0f1">            
+                <p>{{n.post_content|striptags}}</p>
+            </div>
+           <div class="panel-footer">
+               <!--  Renders the button to PM user -->
+               {{function('gw_nb_getMessageURL',n.post_author)}} 
+              <!-- <a class="btn" href="/members/{{function('bp_core_get_user_displayname',n.post_author)}}">View Profile</a>-->
+           </div>    
+        </div>    
+        {% endfor %}
+    </div>
+</div>
