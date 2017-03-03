@@ -29,7 +29,7 @@
 $(document).ready(function () {
 $('form.new-notice-btn').submit(function (event) {
 event.preventDefault();
-var html = '<div class="panel panel-warning"><div class="panel-heading">New Notice</div>            <div class="panel-body"><form class="form new-notice-entry">                            <label for="title">Notice Title</label><input name="title" class="form-control" type="text"  placeholder="Title"> </input><label>What kind of volunteering are you looking for?</label><textarea class="form-control" name="content"></textarea> {{function("wp_nonce_field","new-notice")}} <input type="hidden" name="action" value="gw_new_notice"> <input type="submit" value="Submit"></button></form> </div></div>';
+var html = '<div class="panel panel-warning"><div class="panel-heading">New Notice</div>            <div class="panel-body"><form class="form new-notice-entry">                            <label for="title">Notice Title</label><input name="title" class="form-control" type="text"  placeholder="Title"> </input><label>Region</label> <select name="region">        {% for r in regions %}            <option>{{r.name}}</option>        {% endfor %} </select>  <label>Notice Content</label><textarea class="form-control" name="content"></textarea> {{function("wp_nonce_field","new-notice")}} <input type="hidden" name="action" value="gw_new_notice"> <input type="submit" value="Submit"></button></form> </div></div>';
 
 $('form.new-notice-btn').after(html);
 $('form.new-notice-btn').slideUp();
@@ -40,14 +40,34 @@ $('form.new-notice-btn').slideUp();
 })(jQuery)
 </script>
 
-<div class="row  text-center">
+<div class="row text-center">
     <div class="col-sm-12">
     <div class="col-sm-12">
     <h1>{{type}} Hotlist</h1>
-        <a class="btn button" href="/hotlist/?t=h">Host Notices</a>
-        <a class="btn button" href="/hotlist/?t=w">WWOOFER Notices</a>
+    {% if type == 'Host' %}
+        <a class="btn button" href="/hotlist/?t=w">View WWOOFER Notices</a>
+
+    {% else %}
+            <a class="btn button" href="/hotlist/?t=h">View Host Notices</a> 
+
+    {% endif %}
         <form class="new-notice-btn"><input type="submit" value="New Notice"></input></form>
-         
+        <form class="filter-notice-btn">
+        <select type="submit" name="r" onchange="this.form.submit()">
+        <option>Filter by Region</option>
+        {% for r in regions %}
+            <option>{{r.name}}</option>
+        {% endfor %}
+
+        </select>
+{% if type == 'Host' %}
+<input type="hidden" name="t" value="h"></input>
+    {% else %}
+<input type="hidden" name="t" value="w"></input>
+    {% endif %}
+
+        </form>
+
 
     </div>
         {% for n in data %}
@@ -62,7 +82,12 @@ $('form.new-notice-btn').slideUp();
                 </div>
                 <div class="col-md-9">
                     <h3>{{n.post_title}}</h3>
-                    <p>Posted: {{n.post_date}}</p>
+                    <p>Posted: {{n.post_date}} <br>
+                    {% set reg = function('get_the_terms',n.ID,'notice_region')[0]  %}
+                    
+                    {% if reg.name  is defined %}
+                    Region: {{ reg.name }}</p>
+                    {% endif %}
                 </div>
             </div>    
             </div>

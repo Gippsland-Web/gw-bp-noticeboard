@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.1
+ Version: 1.3
  Author URI: https://wordpress.org/
  GitHub Plugin URI: gippslandweb/gw-bp-noticeboard
  */
@@ -21,6 +21,7 @@ class GW_NoticeBoard {
     function AjaxNotice() {
         $title = $_POST['title'];
         $contents = $_POST['content'];
+        $region = esc_attr($_POST['region']);
         if( !wp_verify_nonce( $_POST['_wpnonce'], 'new-notice' ) ) die();
 
         
@@ -52,7 +53,7 @@ class GW_NoticeBoard {
                 'post_content' => esc_attr($contents),
                 'post_author' => get_current_user_id(),
                 'post_status' => 'publish',
-                'tax_input' => array('notice_type' => $noticeType)
+                'tax_input' => array('notice_type' => $noticeType, 'notice_region' => $region)
             ); 
             $postID = wp_insert_post($newNotice,$err);
             if(isset($err) || $postID == 0){
@@ -87,6 +88,22 @@ class GW_NoticeBoard {
         register_taxonomy('notice_type','gwnotice',array(
             'labels' => $taxLabels,
         ));
+
+        wp_insert_term("wwoofer-notice","notice_type",array('description' => 'WWOOFER Notice', 'slug' => 'wwoofer-notice'));
+        wp_insert_term("host-notice","notice_type",array('description' => 'Host Notice', 'slug' => 'host-notice'));
+
+
+        $regionLabels = array(
+        'name' => _x("Regions",""),
+        'singular_name' => _x("Region",""),
+        );
+        register_taxonomy('notice_region','gwnotice',array(
+            'labels' => $regionLabels,
+        ));
+
+        wp_insert_term("All","notice_region",array('description' => 'All Notices', 'slug' => 'region-all'));
+
+
     }
 
 
@@ -94,6 +111,9 @@ class GW_NoticeBoard {
         $type = "host-notice";
         if(isset($_GET['t']) && $_GET['t'] == 'w')
             $type = "wwoofer-notice";
+        if(isset($_GET['r']) && $_GET['r'] != 'All'){
+            $region = esc_attr($_GET['r']);
+        }
 
         $args = array(
             'post_type' => 'gwnotice',
@@ -104,9 +124,19 @@ class GW_NoticeBoard {
                 'field' => 'slug',
                 'terms' => $type
             )
-        ),
+            ),
         'date_query' => array(array('after' => '2 weeks ago')) );
         $context = Timber::get_context();
+
+        if(isset($region)) {
+            array_push($args['tax_query'],
+            array(
+                'taxonomy' => 'notice_region',
+                'field' => 'name',
+                'terms' => $region
+            ));
+            $context['region'] = $region;
+        }
         
         $context['data'] = Timber::get_posts($args);
         switch($type) {
@@ -117,6 +147,7 @@ class GW_NoticeBoard {
                 $context['type'] = "WWOOFER";
                 break;
         }
+        $context['regions'] = get_terms(array('taxonomy' => 'notice_region', 'hide_empty' => false));
         
         Timber::render('noticeboard.twig', $context,false,TimberLoader::CACHE_NONE);
 
