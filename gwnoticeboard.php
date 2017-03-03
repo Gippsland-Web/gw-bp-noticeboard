@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.3
+ Version: 1.4
  Author URI: https://wordpress.org/
  GitHub Plugin URI: gippslandweb/gw-bp-noticeboard
  */
@@ -16,7 +16,6 @@ class GW_NoticeBoard {
         add_action("init", array($this,"InitPostTypes"));
         add_shortcode("gw-hotlist",array($this,'RenderNoticeBoard'));
         add_action('wp_ajax_gw_new_notice', 	 array($this, 'AjaxNotice'));
-
     }
     function AjaxNotice() {
         $title = $_POST['title'];
@@ -88,9 +87,10 @@ class GW_NoticeBoard {
         register_taxonomy('notice_type','gwnotice',array(
             'labels' => $taxLabels,
         ));
-
-        wp_insert_term("wwoofer-notice","notice_type",array('description' => 'WWOOFER Notice', 'slug' => 'wwoofer-notice'));
-        wp_insert_term("host-notice","notice_type",array('description' => 'Host Notice', 'slug' => 'host-notice'));
+        if(!term_exists('wwoofer-notice','notice_type'))
+            wp_insert_term("wwoofer-notice","notice_type",array('name' => 'WWOOFER Notice', 'description' => 'WWOOFER Notice', 'slug' => 'wwoofer-notice'));
+        if(!term_exists('host-notice','notice_type'))
+            wp_insert_term("host-notice","notice_type",array('name' => 'Host Notice','description' => 'Host Notice', 'slug' => 'host-notice'));
 
 
         $regionLabels = array(
@@ -100,8 +100,8 @@ class GW_NoticeBoard {
         register_taxonomy('notice_region','gwnotice',array(
             'labels' => $regionLabels,
         ));
-
-        wp_insert_term("All","notice_region",array('description' => 'All Notices', 'slug' => 'region-all'));
+        if(!term_exists('region-all','notice_region'))
+            wp_insert_term("All","notice_region",array('description' => 'All Notices', 'slug' => 'region-all'));
 
 
     }
