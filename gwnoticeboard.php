@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.5.1
+ Version: 1.5.2
  Author URI: https://wordpress.org/
  GitHub Plugin URI: Gippsland-Web/gw-bp-noticeboard
  */
@@ -45,22 +45,26 @@ class GW_NoticeBoard {
         if($response['result'] === true){
             $noticeType = 'host-notice';
             if(bp_get_member_type(get_current_user_id()) == "wwoofer")
-                $noticeType = 'wwoofer-notice';
+                $noticeType = 'wwoofer-notice'; 
             $newNotice = array(
                 'post_title' => esc_attr($title),
                 'post_type' => "gwnotice",
                 'post_content' => esc_attr($contents),
                 'post_author' => get_current_user_id(),
                 'post_status' => 'publish',
-                'tax_input' => array('notice_type' => $noticeType, 'notice_region' => $region)
             ); 
             $postID = wp_insert_post($newNotice,$err);
             if(isset($err) || $postID == 0){
                 $response['result'] = false;
                 $response['errors'][] = "Error posting Notice".$err;
             }
-        }
+            else {
+                wp_set_object_terms($postID,$noticeType,'notice_type');
+                wp_set_object_terms($postID,$region,'notice_region');
 
+            }
+        }
+      
         wp_send_json($response);
         die();
     }
@@ -148,7 +152,6 @@ class GW_NoticeBoard {
                 break;
         }
         $context['regions'] = get_terms(array('taxonomy' => 'notice_region', 'hide_empty' => false));
-        
         Timber::render('noticeboard.twig', $context,false,TimberLoader::CACHE_NONE);
 
     }
