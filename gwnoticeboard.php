@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.5
+ Version: 1.5.1
  Author URI: https://wordpress.org/
  GitHub Plugin URI: Gippsland-Web/gw-bp-noticeboard
  */
@@ -157,10 +157,11 @@ $GWNoticeBoard = new GW_NoticeBoard();
 
 //Left public to make it easy to call from twig - Sorry
 function gw_nb_getMessageURL($id) {
-        $author = bp_core_get_user_displayname($id);
-        return '<a class="btn" href="'.wp_nonce_url( bp_loggedin_user_domain() . 'bp-' . bp_get_messages_slug() . '/?new-message&to=' . $author ) .'title="Response%20to%20Notice">Private Message</a>';
-        //return '<a class="btn" href="'.wp_nonce_url( bp_loggedin_user_domain() . bp_get_messages_slug() . '/compose/?r=' . $author ) .'title="Response to Notice">Private Message</a>';
 
+    if(!is_user_logged_in())
+    return;
+            $author = bp_core_get_user_displayname($id);
+    return ('<div class="message-button  generic-button" id="message-button"><a href="/wpc-messages/'.bp_core_get_username($id).'/">Private Message</a></div>');
 }
 
 
