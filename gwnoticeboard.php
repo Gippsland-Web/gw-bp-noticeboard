@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.5.2
+ Version: 1.5.3
  Author URI: https://wordpress.org/
  GitHub Plugin URI: Gippsland-Web/gw-bp-noticeboard
  */
@@ -152,8 +152,7 @@ class GW_NoticeBoard {
                 break;
         }
         $context['regions'] = get_terms(array('taxonomy' => 'notice_region', 'hide_empty' => false));
-        Timber::render('noticeboard.twig', $context,false,TimberLoader::CACHE_NONE);
-
+        return Timber::render('noticeboard.twig', $context,false,TimberLoader::CACHE_NONE);
     }
 }
 $GWNoticeBoard = new GW_NoticeBoard();
