@@ -4,7 +4,7 @@
  Plugin URI: 
  Description: Adds [gw-hotlist] shortcode for a Notice Board system
  Author: GippslandWeb
- Version: 1.5.4
+ Version: 1.5.5
  Author URI: https://wordpress.org/
  GitHub Plugin URI: Gippsland-Web/gw-bp-noticeboard
  */
@@ -16,6 +16,22 @@ class GW_NoticeBoard {
         add_action("init", array($this,"InitPostTypes"));
         add_shortcode("gw-hotlist",array($this,'RenderNoticeBoard'));
         add_action('wp_ajax_gw_new_notice', 	 array($this, 'AjaxNotice'));
+
+        add_action('transition_post_status', array($this, "NoticePosted"),10,3);
+    }
+
+    function NoticePosted($newStatus, $oldStatus, $post) {
+        $postType = get_post_type($post);
+        if($postType == "gwnotice" && $newStatus == "pending") {
+            $subscribers = get_users( array ( 'role' => 'administrator' ) );
+            $emails      = array ();
+            foreach ( $subscribers as $subscriber )
+                $emails[] = $subscriber->user_email;
+
+                $body = "There is a new notice to approve:<br><h3>".$post->post_title.'</h3><br><p>'.$post->post_content.'</p>';
+                $body .= site_url().'/wp-admin/post.php?post='.$post->ID.'&action=edit';
+                wp_mail($emails,"New Notice Pending Moderation",$body);
+        }
     }
     function AjaxNotice() {
         $title = $_POST['title'];
@@ -35,10 +51,10 @@ class GW_NoticeBoard {
         }
         
             
-        if(!isset($contents) || strlen($contents) < 50)
+        if(!isset($contents) || strlen($contents) > 150)
         {
             $response['result'] = false;
-            $response['errors'][] = sprintf(__('Notice must be at least %s characters', 'bp-user-reviews'), 50);
+            $response['errors'][] = sprintf(__('Notice must be less than %s characters', 'bp-user-reviews'), 150);
         }
 
 
@@ -51,7 +67,7 @@ class GW_NoticeBoard {
                 'post_type' => "gwnotice",
                 'post_content' => esc_attr($contents),
                 'post_author' => get_current_user_id(),
-                'post_status' => 'publish',
+                'post_status' => 'pending',
             ); 
             $postID = wp_insert_post($newNotice,$err);
             if(isset($err) || $postID == 0){
@@ -152,7 +168,7 @@ class GW_NoticeBoard {
                 break;
         }
         $context['regions'] = get_terms(array('taxonomy' => 'notice_region', 'hide_empty' => false));
-        return Timber::compile('noticeboard.twig', $context,false,TimberLoader::CACHE_NONE);
+        return Timber::compile('noticeboard.php', $context,false,TimberLoader::CACHE_NONE);
     }
 }
 $GWNoticeBoard = new GW_NoticeBoard();
